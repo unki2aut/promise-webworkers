@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    function get(url) {
+      return new Promise((resolve, reject) => {
+        const req = new XMLHttpRequest();
+        req.open('GET', url);
+
+        req.onload = () => {
+          if (req.status === 200) {
+            resolve(req.response);
+          } else {
+            reject(Error(req.statusText));
+          }
+        };
+
+        req.onerror = () => {
+          reject(Error('Network Error'));
+        };
+
+        req.send();
+      });
+    }
+
+    // how to use async-await directly in the script tag
+    (async function() {
+      const res = await get('https://httpbin.org/get');
+      console.log(res);
+    }());
+</script>
+</body>
+</html>
