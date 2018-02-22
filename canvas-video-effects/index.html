@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebCam Effects</title>
+    <style> body { margin: 0; } </style>
+</head>
+<body>
+
+<video id="video-stream" width=640 height=480></video>
+<canvas id="canvas-effects" width=640 height=480></canvas>
+
+<script type="text/javascript">
+  // DEMO was built upon the code from
+  // https://github.com/conorbuck/canvas-video-effects
+
+  const camera = document.getElementById('video-stream'),
+    canvasEffect = document.getElementById('canvas-effects'),
+    helperCanvas = document.createElement('canvas'),
+    ctx = helperCanvas.getContext('2d'),
+    ctxEffects = canvasEffect.getContext('2d'),
+    processor = new Worker('image-worker.js'),
+    w = camera.width,
+    h = camera.height;
+
+  helperCanvas.setAttribute('width', w);
+  helperCanvas.setAttribute('height', h);
+
+
+  /* Setup WebWorker messaging */
+  processor.onmessage = function(event) {
+    ctxEffects.putImageData(event.data.dstData, 0, 0);
+  };
+
+  /* Setup video stream and canvas */
+  navigator.getUserMedia =
+    navigator.getUserMedia ||
+    navigator.mediaDevices.getUserMedia;
+
+  navigator.getUserMedia({ video: true }, function(stream) {
+    camera.src = URL.createObjectURL(stream);
+    camera.play();
+    setInterval(render, 10); // ~ 100 fps
+  }, function(error) {
+    console.log('error', error);
+  });
+
+  const render = function() {
+    ctx.drawImage(camera, 0, 0, w, h);
+    const srcData = ctx.getImageData(0, 0, w, h);
+
+    processor.postMessage({
+      imageData: srcData
+    });
+  };
+</script>
+
+</body>
+</html>
